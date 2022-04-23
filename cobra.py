@@ -6,7 +6,7 @@ pygame.init()
 
 size_game = 30
 tabel_size = 20
-tale_size = 3
+tale_size = 4
 color = (0, 255, 0)
 fps = 8
 direção = "baixo"
