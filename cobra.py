@@ -8,7 +8,7 @@ size_game = 30
 tabel_size = 20
 tale_size = 2
 color = (0, 255, 0)
-fps = 12
+fps = 8
 direção = "baixo"
 
 
@@ -22,9 +22,6 @@ pygame.display.set_caption("Cobrita")
 food = Cobra_pulsante.Food(size = size_game, posi_x = choice(pints), posi_y = choice(pints))
 cobrita = Cobra_pulsante.sanke(size = size_game, posi_x = choice(pints), posi_y = choice(pints), color = color)
 tiks = pygame.time.Clock()
-
-efeito_acerto = pygame.mixer.Sound('musica/acerto.wav')
-efeito_erro = pygame.mixer.Sound('musica/erro.wav')
 
 tale_snake = []
 is_presing = False
@@ -88,12 +85,10 @@ while True:
 
     if cobrita.posi_x == food.posi_x and cobrita.posi_y == food.posi_y:
 
-        efeito_acerto.play()
         tale_size += 1
         food.randomizer(pints, tale_snake, cobrita.posi_x, cobrita.posi_y)
     
     if cobrita.posi_x < 0 or cobrita.posi_x > size_display_x - size_game or cobrita.posi_y < 0 or cobrita.posi_y > size_display_y - size_game  or (cobrita.posi_x, cobrita.posi_y) in tale_snake:
-        efeito_erro.play()
         tale_size = 2
         direção = "baixo"
         tale_snake = []
