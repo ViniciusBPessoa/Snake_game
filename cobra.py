@@ -8,7 +8,7 @@ size_game = 30
 tabel_size = 20
 tale_size = 2
 color = (0, 255, 0)
-fps = 8
+fps = 7
 direção = "baixo"
 
 
