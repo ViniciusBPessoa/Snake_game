@@ -1,76 +1,103 @@
 import pygame
+import cobra
 from random import choice
 
-class Food:
-    def __init__(self, posi_x = 0, posi_y = 0, size = 10):
+pygame.init()
 
-        self.posi_x = posi_x
-        self.posi_y = posi_y
-        self.size = size
+size_game = 30
+tabel_size = 20
+tale_size = 3
+color = (0, 255, 0)
+fps = 7
+direção = "baixo"
 
-    def drow_food(self, scream):
 
-        pygame.draw.rect(scream, (255, 0, 0), (self.posi_x, self.posi_y, self.size, self.size))
-        pygame.draw.rect(scream, (0, 0, 0), (self.posi_x, self.posi_y, self.size, self.size), 2)
+size_display_x = tabel_size * size_game
+size_display_y = tabel_size * size_game
+pints = [x for x in range (0, (size_game * tabel_size) + 1) if x % size_game == 0 and x != size_game * tabel_size or x == 0]
+
+screan = pygame.display.set_mode((size_display_x, size_display_y))
+pygame.display.set_caption("Cobrita")
+
+food = cobra.Food(size = size_game, posi_x = choice(pints), posi_y = choice(pints))
+cobrita = cobra.sanke(size = size_game, posi_x = choice(pints), posi_y = choice(pints), color = color)
+tiks = pygame.time.Clock()
+
+tale_snake = []
+is_presing = False
+
+while True:
     
-    def randomizer(self, point, tale, hart_x, hart_y):
+    tiks.tick(fps)
+    screan.fill((0, 0, 0))
 
-        while True:
+    for event in pygame.event.get():
 
-            self.posi_x = choice(point)
-            self.posi_y = choice(point)
+        if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
 
-            if (self.posi_x, self.posi_y) in tale or (self.posi_x, self.posi_y) == (hart_x, hart_y):
-                continue
-                
-            else:
-                break
+        if event.type == pygame.KEYDOWN and is_presing == False:
 
-class sanke:
-
-    def __init__(self, posi_x = 0, posi_y = 0, size = 10, color = 0):
-
-        self.posi_x = posi_x
-        self.posi_y = posi_y
-        self.size = size
-        self.color = color
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+                quit()
+            
+            if event.key == pygame.K_d:
+                if direção != "esquerda":
+                    direção = "direita"
+            
+            if event.key == pygame.K_a:
+                if direção != "direita":
+                    direção = "esquerda"
+            
+            if event.key == pygame.K_w:
+                if direção != "baixo":
+                    direção = "cima"
+            
+            if event.key == pygame.K_s:
+                if direção != "cima":
+                    direção = "baixo"
         
-    def drow_snake(self, scream):
 
-        pygame.draw.rect(scream, self.color, (self.posi_x, self.posi_y, self.size, self.size))
-        pygame.draw.rect(scream, (0, 0, 0), (self.posi_x, self.posi_y, self.size, self.size), 2)
+
+    if direção == "baixo":
+        cobrita.posi_x += 0
+        cobrita.posi_y += size_game
     
-    def randomizer(self, point):
+    if direção == "cima":
+        cobrita.posi_x += 0
+        cobrita.posi_y -= size_game
 
-        self.posi_x = choice(point)
-        self.posi_y = choice(point)
+    if direção == "esquerda":
+        cobrita.posi_x -= size_game
+        cobrita.posi_y -= 0
+    
+    if direção == "direita":
+        cobrita.posi_x += size_game
+        cobrita.posi_y -= 0
 
-def drow_tale(scream, tale_s, size):
+    food.drow_food(screan)
+    cobrita.drow_snake(screan)
 
-    if len(tale_s) != 0:
-        tamanho = len(tale_s)
-        variavel = round((255 / tamanho))
-        votano = 0
-        ino = 255
-        vai= True
+    if len(tale_snake) > tale_size:
+        tale_snake.remove(tale_snake[0])
 
-        for c in tale_s:
+    if cobrita.posi_x == food.posi_x and cobrita.posi_y == food.posi_y:
 
-            if votano > 255:
-                votano = 255
-            if ino < 0:
+        tale_size += 1
+        food.randomizer(pints, tale_snake, cobrita.posi_x, cobrita.posi_y)
+    
+    if cobrita.posi_x < 0 or cobrita.posi_x > size_display_x - size_game or cobrita.posi_y < 0 or cobrita.posi_y > size_display_y - size_game  or (cobrita.posi_x, cobrita.posi_y) in tale_snake:
+        tale_size = 2
+        direção = "baixo"
+        tale_snake = []
+        cobrita.randomizer(pints)
+        food.randomizer(pints, tale_snake, cobrita.posi_x, cobrita.posi_y)
 
-                ino = 255
-
-            pygame.draw.rect(scream, (0, votano, ino), (c[0], c[1], size, size))
-            pygame.draw.rect(scream, (0 , 0, 0), (c[0], c[1], size, size), 2)
-
-            if vai:
-                votano += variavel * 2
-
-                if votano > 255:
-
-                    vai = False
-
-            else:
-                ino -= variavel * 2
+    
+    cobra.drow_tale(screan, tale_snake, size_game)
+    
+    tale_snake.append((cobrita.posi_x, cobrita.posi_y))
+    pygame.draw.rect(screan, (255,0,0), (0, 0, size_display_x, size_display_x), 2)
+    pygame.display.update()
