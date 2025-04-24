@@ -4,11 +4,12 @@ from random import choice
 
 pygame.init()
 
-size_game = 30
-tabel_size = 20
-tale_size = 3
+size_game = 8
+tabel_size = 100
+original_tale_size = 600
+tale_size = original_tale_size
 color = (0, 255, 0)
-fps = 7
+fps = 24
 direção = "baixo"
 
 
@@ -89,7 +90,7 @@ while True:
         food.randomizer(pints, tale_snake, cobrita.posi_x, cobrita.posi_y)
     
     if cobrita.posi_x < 0 or cobrita.posi_x > size_display_x - size_game or cobrita.posi_y < 0 or cobrita.posi_y > size_display_y - size_game  or (cobrita.posi_x, cobrita.posi_y) in tale_snake:
-        tale_size = 2
+        tale_size = original_tale_size
         direção = "baixo"
         tale_snake = []
         cobrita.randomizer(pints)
