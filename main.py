@@ -4,101 +4,126 @@ from random import choice
 
 pygame.init()
 
-size_game = 8
-tabel_size = 100
-original_tale_size = 600
-tale_size = original_tale_size
-color = (0, 255, 0)
-fps = 24
-direção = "baixo"
+CELL = 20
+COLS = 40
+WIN_W = CELL * COLS
+WIN_H = CELL * COLS
+FPS_BASE = 10
+TAIL_START = 5
 
-
-size_display_x = tabel_size * size_game
-size_display_y = tabel_size * size_game
-pints = [x for x in range (0, (size_game * tabel_size) + 1) if x % size_game == 0 and x != size_game * tabel_size or x == 0]
-
-screan = pygame.display.set_mode((size_display_x, size_display_y))
+screen = pygame.display.set_mode((WIN_W, WIN_H))
 pygame.display.set_caption("Cobrita")
 
-food = cobra.Food(size = size_game, posi_x = choice(pints), posi_y = choice(pints))
-cobrita = cobra.sanke(size = size_game, posi_x = choice(pints), posi_y = choice(pints), color = color)
-tiks = pygame.time.Clock()
+font = pygame.font.SysFont("monospace", 18, bold=True)
+big_font = pygame.font.SysFont("monospace", 52, bold=True)
+mid_font = pygame.font.SysFont("monospace", 22, bold=True)
 
-tale_snake = []
-is_presing = False
+points = list(range(0, WIN_W, CELL))
+
+snake = cobra.Snake(size=CELL, posi_x=choice(points), posi_y=choice(points))
+food = cobra.Food(size=CELL, posi_x=choice(points), posi_y=choice(points))
+
+clock = pygame.time.Clock()
+tick = 0
+tail = []
+direction = "baixo"
+score = 0
+high_score = 0
+fps = FPS_BASE
+game_over_until = 0
+last_score = 0
+
+
+def reset():
+    global tail, direction, score, fps
+    tail = []
+    direction = "baixo"
+    score = 0
+    fps = FPS_BASE
+    snake.randomize(points)
+    food.randomize(points, tail, snake.posi_x, snake.posi_y)
+
 
 while True:
-    
-    tiks.tick(fps)
-    screan.fill((0, 0, 0))
+    tick += 1
+    now = pygame.time.get_ticks()
 
-    for event in pygame.event.get():
-
-        if event.type == pygame.QUIT:
+    if now < game_over_until:
+        clock.tick(30)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 quit()
 
-        if event.type == pygame.KEYDOWN and is_presing == False:
+        screen.fill((20, 0, 0))
+        msg = big_font.render("GAME OVER", True, (255, 50, 50))
+        sub = mid_font.render(f"Score: {last_score}    Best: {high_score}", True, (200, 200, 200))
+        tip = font.render("reiniciando...", True, (80, 80, 80))
+        screen.blit(msg, (WIN_W // 2 - msg.get_width() // 2, WIN_H // 2 - 70))
+        screen.blit(sub, (WIN_W // 2 - sub.get_width() // 2, WIN_H // 2 + 10))
+        screen.blit(tip, (WIN_W // 2 - tip.get_width() // 2, WIN_H // 2 + 50))
+        pygame.display.update()
+        continue
 
+    clock.tick(fps)
+    screen.fill((12, 12, 12))
+    cobra.draw_grid(screen, CELL, WIN_W, WIN_H)
+
+    pressed = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 quit()
-            
-            if event.key == pygame.K_d:
-                if direção != "esquerda":
-                    direção = "direita"
-            
-            if event.key == pygame.K_a:
-                if direção != "direita":
-                    direção = "esquerda"
-            
-            if event.key == pygame.K_w:
-                if direção != "baixo":
-                    direção = "cima"
-            
-            if event.key == pygame.K_s:
-                if direção != "cima":
-                    direção = "baixo"
-        
+            if not pressed:
+                if event.key in (pygame.K_d, pygame.K_RIGHT) and direction != "esquerda":
+                    direction = "direita"
+                    pressed = True
+                elif event.key in (pygame.K_a, pygame.K_LEFT) and direction != "direita":
+                    direction = "esquerda"
+                    pressed = True
+                elif event.key in (pygame.K_w, pygame.K_UP) and direction != "baixo":
+                    direction = "cima"
+                    pressed = True
+                elif event.key in (pygame.K_s, pygame.K_DOWN) and direction != "cima":
+                    direction = "baixo"
+                    pressed = True
 
+    if direction == "baixo":      snake.posi_y += CELL
+    elif direction == "cima":     snake.posi_y -= CELL
+    elif direction == "esquerda": snake.posi_x -= CELL
+    elif direction == "direita":  snake.posi_x += CELL
 
-    if direção == "baixo":
-        cobrita.posi_x += 0
-        cobrita.posi_y += size_game
-    
-    if direção == "cima":
-        cobrita.posi_x += 0
-        cobrita.posi_y -= size_game
+    if (snake.posi_x < 0 or snake.posi_x >= WIN_W or
+            snake.posi_y < 0 or snake.posi_y >= WIN_H or
+            (snake.posi_x, snake.posi_y) in tail):
+        last_score = score
+        if score > high_score:
+            high_score = score
+        game_over_until = pygame.time.get_ticks() + 2000
+        reset()
+        continue
 
-    if direção == "esquerda":
-        cobrita.posi_x -= size_game
-        cobrita.posi_y -= 0
-    
-    if direção == "direita":
-        cobrita.posi_x += size_game
-        cobrita.posi_y -= 0
+    if snake.posi_x == food.posi_x and snake.posi_y == food.posi_y:
+        score += 1
+        fps = FPS_BASE + score // 3
+        food.randomize(points, tail, snake.posi_x, snake.posi_y)
 
-    food.drow_food(screan)
-    cobrita.drow_snake(screan)
+    if len(tail) >= TAIL_START + score:
+        tail.pop(0)
 
-    if len(tale_snake) > tale_size:
-        tale_snake.remove(tale_snake[0])
+    cobra.draw_tail(screen, tail, CELL)
+    food.draw(screen, tick)
+    snake.draw_head(screen, direction)
+    cobra.draw_hud(screen, score, high_score, font)
 
-    if cobrita.posi_x == food.posi_x and cobrita.posi_y == food.posi_y:
+    pygame.draw.rect(screen, (55, 55, 55), (0, 0, WIN_W, WIN_H), 2)
 
-        tale_size += 1
-        food.randomizer(pints, tale_snake, cobrita.posi_x, cobrita.posi_y)
-    
-    if cobrita.posi_x < 0 or cobrita.posi_x > size_display_x - size_game or cobrita.posi_y < 0 or cobrita.posi_y > size_display_y - size_game  or (cobrita.posi_x, cobrita.posi_y) in tale_snake:
-        tale_size = original_tale_size
-        direção = "baixo"
-        tale_snake = []
-        cobrita.randomizer(pints)
-        food.randomizer(pints, tale_snake, cobrita.posi_x, cobrita.posi_y)
-
-    
-    cobra.drow_tale(screan, tale_snake, size_game)
-    
-    tale_snake.append((cobrita.posi_x, cobrita.posi_y))
-    pygame.draw.rect(screan, (255,0,0), (0, 0, size_display_x, size_display_x), 2)
+    tail.append((snake.posi_x, snake.posi_y))
     pygame.display.update()
